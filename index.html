@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>System Security</title>
+
+<!-- =========================
+     CONFIGURAÇÃO DA PRÉVIA
+     AO COMPARTILHAR O LINK
+========================= -->
+
+<meta name="description" content="System Security Monitor">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="System Security">
+<meta property="og:description" content="System Security Monitor">
+
+<!--
+    A imagem deve ficar na mesma pasta
+    deste index.html com o nome:
+
+    preview.jpg
+
+    Depois troque SEU-USUARIO e SEU-REPOSITORIO
+    pelo endereço real do seu GitHub Pages.
+-->
+<meta property="og:image" content="https://SEU-USUARIO.github.io/SEU-REPOSITORIO/preview.png">
+
+<meta property="og:image:alt" content="System Security Monitor">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+<meta property="og:url" content="https://SEU-USUARIO.github.io/SEU-REPOSITORIO/">
+<meta property="og:site_name" content="System Security">
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="System Security">
+<meta name="twitter:description" content="System Security Monitor">
+<meta name="twitter:image" content="https://SEU-USUARIO.github.io/SEU-REPOSITORIO/preview.jpg">
+
+
+<style>
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+    font-family: "Courier New", monospace;
+    color: #00ff66;
+}
+
+body {
+    position: relative;
+}
+
+/* Fundo de código */
+canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: .22;
+}
+
+/* Efeito de tela */
+.scanlines {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.02) 0px,
+        rgba(255,255,255,0.02) 1px,
+        transparent 2px,
+        transparent 4px
+    );
+    z-index: 5;
+}
+
+/* Conteúdo */
+.container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Cabeçalho */
+.header {
+    border: 1px solid #00ff66;
+    padding: 12px;
+    margin-bottom: 15px;
+    box-shadow: 0 0 15px rgba(0,255,102,.3);
+}
+
+.header-title {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.status {
+    margin-top: 6px;
+    font-size: 12px;
+}
+
+.online {
+    color: #00ff66;
+}
+
+.dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #00ff66;
+    border-radius: 50%;
+    margin-right: 5px;
+    box-shadow: 0 0 10px #00ff66;
+}
+
+/* Terminal */
+.terminal {
+    flex: 1;
+    border: 1px solid rgba(0,255,102,.6);
+    padding: 14px;
+    overflow: hidden;
+    background: rgba(0,0,0,.65);
+    box-shadow: inset 0 0 30px rgba(0,255,102,.08);
+}
+
+.line {
+    font-size: 12px;
+    line-height: 1.65;
+    word-break: break-word;
+}
+
+.warning {
+    color: #ff3333;
+    text-shadow: 0 0 8px #ff0000;
+}
+
+.yellow {
+    color: #ffe600;
+}
+
+.blue {
+    color: #00ccff;
+}
+
+/* Barra */
+.progress-box {
+    margin-top: 18px;
+}
+
+.progress-text {
+    font-size: 12px;
+    margin-bottom: 7px;
+}
+
+.progress {
+    width: 100%;
+    height: 10px;
+    border: 1px solid #00ff66;
+    padding: 1px;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: #00ff66;
+    box-shadow: 0 0 10px #00ff66;
+    transition: width .2s;
+}
+
+/* Alerta */
+.alert {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100% - 40px);
+    max-width: 360px;
+    padding: 22px;
+    background: #050505;
+    border: 1px solid #ff3333;
+    box-shadow:
+        0 0 20px rgba(255,0,0,.5),
+        inset 0 0 20px rgba(255,0,0,.08);
+    z-index: 20;
+    display: none;
+    text-align: center;
+}
+
+.alert h2 {
+    color: #ff3333;
+    font-size: 20px;
+    margin-bottom: 12px;
+}
+
+.alert p {
+    color: #ddd;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.alert button {
+    margin-top: 18px;
+    background: transparent;
+    border: 1px solid #ff3333;
+    color: #ff3333;
+    padding: 10px 20px;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+/* Rodapé */
+.footer {
+    margin-top: 12px;
+    font-size: 10px;
+    opacity: .7;
+}
+
+/* Glitch */
+.glitch {
+    animation: glitch .12s infinite;
+}
+
+@keyframes glitch {
+    0% { transform: translate(0); }
+    25% { transform: translate(1px,-1px); }
+    50% { transform: translate(-1px,1px); }
+    75% { transform: translate(1px,1px); }
+    100% { transform: translate(0); }
+}
+
+</style>
+</head>
+
+<body>
+
+<canvas id="matrix"></canvas>
+
+<div class="scanlines"></div>
+
+<div class="container">
+
+    <div class="header">
+        <div class="header-title">
+            SYSTEM SECURITY MONITOR
+        </div>
+
+        <div class="status">
+            <span class="dot"></span>
+            <span class="online">SECURE CONNECTION</span>
+        </div>
+    </div>
+
+    <div class="terminal" id="terminal"></div>
+
+    <div class="progress-box">
+        <div class="progress-text">
+            SYSTEM ANALYSIS: <span id="percent">0</span>%
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" id="bar"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        SECURITY PROTOCOL v4.8.2 // SIMULATION MODE
+    </div>
+
+</div>
+
+<div class="alert" id="alert">
+
+    <h2>⚠ SECURITY ALERT</h2>
+
+    <p>
+        UNAUTHORIZED ACCESS DETECTED
+        <br><br>
+        SYSTEM INTEGRITY COMPROMISED
+    </p>
+
+    <button onclick="closeAlert()">
+        CONTINUE
+    </button>
+
+</div>
+
+<script>
+
+/* =========================
+   MATRIX BACKGROUND
+========================= */
+
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+resizeCanvas();
+
+window.addEventListener("resize", resizeCanvas);
+
+const chars =
+"01ABCDEFGHIJKLMNOPQRSTUVWXYZ#$%&@<>[]{}";
+
+let fontSize = 14;
+let columns = Math.floor(window.innerWidth / fontSize);
+let drops = Array(columns).fill(1);
+
+function matrix() {
+
+    ctx.fillStyle = "rgba(0,0,0,0.08)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    ctx.fillStyle = "#00ff66";
+    ctx.font = fontSize + "px monospace";
+
+    for(let i = 0; i < drops.length; i++) {
+
+        const char =
+            chars[Math.floor(Math.random() * chars.length)];
+
+        ctx.fillText(
+            char,
+            i * fontSize,
+            drops[i] * fontSize
+        );
+
+        if(
+            drops[i] * fontSize > canvas.height &&
+            Math.random() > 0.975
+        ) {
+            drops[i] = 0;
+        }
+
+        drops[i]++;
+    }
+}
+
+setInterval(matrix, 45);
+
+
+/* =========================
+   TERMINAL
+========================= */
+
+const terminal =
+document.getElementById("terminal");
+
+const lines = [
+
+    ["[SYSTEM] Initializing security protocol...", ""],
+
+    ["[SYSTEM] Checking active connections...", "blue"],
+
+    ["[NETWORK] Scanning network interfaces...", ""],
+
+    ["[NETWORK] Interface detected: MOBILE_NET", "blue"],
+
+    ["[ACCESS] Verifying authentication...", ""],
+
+    ["[ACCESS] Authentication bypass attempt detected!", "warning"],
+
+    ["[FIREWALL] Firewall status: ACTIVE", "blue"],
+
+    ["[FIREWALL] Analyzing incoming packets...", ""],
+
+    ["[SYSTEM] Searching for suspicious activity...", ""],
+
+    ["[WARNING] Unauthorized process detected!", "warning"],
+
+    ["[TRACE] Locating source...", "yellow"],
+
+    ["[TRACE] Connection established...", "yellow"],
+
+    ["[SYSTEM] Reading encrypted data...", ""],
+
+    ["[SYSTEM] Decrypting security layer...", ""],
+
+    ["[WARNING] Security breach detected!", "warning"],
+
+    ["[SYSTEM] Attempting emergency lockdown...", "yellow"]
+
+];
+
+let index = 0;
+
+function addLine() {
+
+    if(index >= lines.length) return;
+
+    const div = document.createElement("div");
+
+    div.className = "line " + lines[index][1];
+
+    div.textContent = lines[index][0];
+
+    terminal.appendChild(div);
+
+    terminal.scrollTop = terminal.scrollHeight;
+
+    index++;
+
+    setTimeout(addLine, 500 + Math.random() * 500);
+}
+
+addLine();
+
+
+/* =========================
+   PROGRESS
+========================= */
+
+let progress = 0;
+
+const bar =
+document.getElementById("bar");
+
+const percent =
+document.getElementById("percent");
+
+function updateProgress() {
+
+    if(progress >= 100) {
+
+        setTimeout(() => {
+
+            document
+                .getElementById("alert")
+                .style.display = "block";
+
+        }, 800);
+
+        return;
+    }
+
+    progress += Math.floor(Math.random() * 4) + 1;
+
+    if(progress > 100)
+        progress = 100;
+
+    bar.style.width = progress + "%";
+
+    percent.textContent = progress;
+
+    setTimeout(updateProgress, 350);
+}
+
+updateProgress();
+
+
+/* =========================
+   ALERT
+========================= */
+
+function closeAlert() {
+
+    document
+        .getElementById("alert")
+        .style.display = "none";
+
+    terminal.innerHTML = "";
+
+    const prank = document.createElement("div");
+
+    prank.className = "line glitch";
+
+    prank.style.color = "#00ff66";
+    prank.style.fontSize = "22px";
+    prank.style.marginTop = "30px";
+    prank.textContent = " SEU WHATSAPP ESTÁ SENDO HACKEADO ";
+
+    terminal.appendChild(prank);
+
+    const message = document.createElement("div");
+
+    message.className = "line";
+
+    message.style.marginTop = "15px";
+
+    message.textContent =
+        "Todos seus dados estão sendo vazados.";
+
+    terminal.appendChild(message);
+}
+
+</script>
+
+</body>
+</html>
